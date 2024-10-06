@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
 import seaborn as sns
-from project.utils_yzm import gRNADataset, testDataset, BatchSampler
+from model.project.utils import gRNADataset, testDataset, BatchSampler
 from ray import tune
 
 def set_seed(seed):

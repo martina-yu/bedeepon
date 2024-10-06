@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import KFold
 import seaborn as sns
-from project.utils_yzm import BatchSampler, gRNADataset, testDataset
-from project.functions_yzm import *
+from model.project.utils import BatchSampler, gRNADataset, testDataset
+from model.project.functions import *
 
 
 class BiLSTMTrainable(tune.Trainable):
