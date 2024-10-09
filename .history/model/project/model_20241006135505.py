@@ -16,50 +16,6 @@ from model.project.utils import BatchSampler, gRNADataset, testDataset
 from model.project.functions import *
 
 
-seq_len = 20
-class BiLSTM_Attention(nn.Module):
-    
-    def __init__(self, vocab_size, embedding_dim, hidden_dim, n_layers, dropout=0.5):
-        super(BiLSTM_Attention, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
-        self.embedding = nn.EmbeddingBag(vocab_size, embedding_dim)
-        
-        '''    
-        
-        torch.nn.EmbeddingBag(num_embeddings, embedding_dim, max_norm=None, norm_type=2.0, scale_grad_by_freq=False, mode='mean', sparse=False, _weight=None, include_last_offset=False, padding_idx=None, device=None, dtype=None)
-        '''
-
-        self.rnn = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_dim, num_layers=n_layers,
-                           bidirectional=True)
-        self.fc = nn.Linear(hidden_dim * 2, 1)
-        self.dropout = nn.Dropout(dropout)  
-
-    def attention_net(self, x, query, mask=None): 
-        
-        d_k = query.size(-1)   
-        scores = torch.matmul(query, x.transpose(1, 2)) / math.sqrt(d_k)  
-        alpha_n = F.softmax(scores, dim=-1) 
-        context = torch.matmul(alpha_n, x).sum(1)
-        
-        return context, alpha_n
-    
-    def forward(self, seq, offset, length):
-        global debug_var
-        batch_size = len(length)
-        emb = self.dropout(self.embedding(seq, offset))
-        emb_v = emb.view(batch_size,seq_len, -1)
-        emb_vt = emb_v.transpose(1,0)
-        out, (hidden, _) = self.rnn(emb_vt)
-        out = out.permute(1, 0, 2)  
-        query = self.dropout(out)
-        attn_output, alpha_n = self.attention_net(out, query)
-        
-        logit = F.leaky_relu(self.fc(attn_output))
-        
-        return logit
-
-
 class BiLSTMTrainable(tune.Trainable):
     def setup(self, config):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
